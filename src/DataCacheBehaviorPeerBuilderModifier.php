@@ -68,12 +68,18 @@ public static function cacheFetch(\$key)
     \$result = \Domino\CacheStore\Factory::factory('{$backend}')->get(self::TABLE_NAME, \$key);
 
     if (\$result !== null) {
-        if (\$result instanceof ArrayAccess) {
-            foreach(\$result as \$element) {
-                {$peerClassname}::addInstanceToPool(\$element);
+        if (is_object(\$result)) {
+            \$classname = get_class(\$result);
+            \$reflection = new \\ReflectionClass(\$classname);
+            if (\$reflection->implementsInterface('ArrayAccess')) {
+                foreach(\$result as \$element) {
+                    if (is_object(\$element)) {
+                        {$peerClassname}::addInstanceToPool(\$element);
+                    }
+                }
+            } else {
+                {$peerClassname}::addInstanceToPool(\$result);
             }
-        } else {
-            {$peerClassname}::addInstanceToPool(\$result);
         }
     }
 
